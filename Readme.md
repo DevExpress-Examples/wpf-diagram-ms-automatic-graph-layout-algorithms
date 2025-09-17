@@ -12,7 +12,90 @@ This example connects the [Microsoft Automatic Graph Layout (MSAGL)](https://git
 
 ## Implementation Details
 
-...
+### Load Sample Graph
+
+The application loads a diagram from an XML file before applying a layout. This example includes five datasets: **Sugiyama**, **Ranking**, **PhyloTree**, **MDS**, and **Disconnected Graphs**.
+
+```csharp
+void LoadSugiyama(object sender, DevExpress.Xpf.Bars.ItemClickEventArgs e) {
+    diagramControl.LoadDocument("Data/SugiyamaLayout.xml");
+}
+void LoadMDS(object sender, DevExpress.Xpf.Bars.ItemClickEventArgs e) {
+    diagramControl.LoadDocument("Data/MDSLayout.xml");
+}
+// … similar for Ranking, PhyloTree, DisconnectedGraphs
+```
+
+### Extract and Arrange Nodes
+
+The `GraphOperations.GetDiagramGraph` extracts nodes and edges from the diagram. The selected MSAGL calculator computes positions, which are then applied to the diagram:
+
+```csharp
+void ApplyLayout(GraphLayout layout) {
+    try {
+        diagramControl.RelayoutDiagramItems(
+            layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl))
+        );
+        diagramControl.Items.OfType<IDiagramConnector>().ForEach(connector => { 
+            connector.Type = layout.GetDiagramConnectorType(); 
+            connector.UpdateRoute(); 
+        });
+        diagramControl.FitToDrawing();
+    } catch(Exception e) {
+        DXMessageBox.Show(string.Format("Error message: '{0}'", e.Message), "Error has been occurred");
+    }
+}
+```
+
+### Update Connectors
+
+After shapes are repositioned, connectors update routs. The code example sets connector types and updates their routes:
+
+```csharp
+diagramControl.Items.OfType<IDiagramConnector>().ForEach(connector => {
+    connector.Type = layout.GetDiagramConnectorType();
+    connector.UpdateRoute();
+});
+```
+
+The controller also registers a routing strategy:
+
+```csharp
+diagramControl.Controller.RegisterRoutingStrategy(
+    layout.GetDiagramConnectorType(), 
+    layout.GetDiagramRoutingStrategy()
+);
+```
+
+### Display Entire Diagram
+
+The `DiagramControl` adjusts its viewport to display the entire diagram:
+
+```csharp
+diagramControl.FitToDrawing();
+```
+
+### Ribbon commands
+
+Ribbon buttons load documents and apply the corresponding algorithm:
+
+```csharp
+void ApplySugiyama(object s, ItemClickEventArgs e) {
+    ApplyLayout(new GraphLayout(new SugiyamaLayoutCalculator()));
+}
+void ApplyRanking(object s, ItemClickEventArgs e) {
+    ApplyLayout(new GraphLayout(new RankingLayoutCalculator()));
+}
+void ApplyPhyloTree(object s, ItemClickEventArgs e) {
+    ApplyLayout(new PhyloTreeLayout(new PhyloTreeLayoutCalculator()));
+}
+void ApplyMDS(object s, ItemClickEventArgs e) {
+    ApplyLayout(new GraphLayout(new MDSLayoutCalculator()));
+}
+void ApplyDisconnectedGraphs(object s, ItemClickEventArgs e) {
+    ApplyLayout(new GraphLayout(new DisconnectedGraphsLayoutCalculator()));
+}
+```
 
 ## Files to Review
 
@@ -46,7 +129,6 @@ This example connects the [Microsoft Automatic Graph Layout (MSAGL)](https://git
 * [WPF DiagramControl - Create Custom Shapes with Connection Points](https://github.com/DevExpress-Examples/wpf-diagramdesigner-create-custom-shapes-with-connection-points)
 * [WPF DiagramControl - Create Custom Context Menus](https://github.com/DevExpress-Examples/wpf-diagram-custom-context-menu)
 * [WPF Diagram Control - Track and Restrict Drag Actions](https://github.com/DevExpress-Examples/wpf-diagram-track-and-restrict-drag-actions)
-
 
 <!-- feedback -->
 ## Does this example address your development requirements/objectives?
