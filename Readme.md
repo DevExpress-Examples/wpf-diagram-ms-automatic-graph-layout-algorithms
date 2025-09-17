@@ -6,50 +6,39 @@
 
 # WPF Diagram Control - Microsoft Automatic Graph Layout (MSAGL) Algorithms
 
-This example connects the [Microsoft Automatic Graph Layout (MSAGL)](https://github.com/Microsoft/automatic-graph-layout) library to [`DiagramControl`](https://docs.devexpress.com/WPF/DevExpress.Xpf.Diagram.DiagramControl). This technic allows you apply advanced algorithms such as  **Sugiyama**, **Ranking**, **PhyloTree**, **MDS**, or **Disconnected Graphs** with one click.
+This example integrates custom layout algorithms with [`DiagramControl`](https://docs.devexpress.com/WPF/DevExpress.Xpf.Diagram.DiagramControl). You can extract a graph from the diagram, process the graph with an external algorithm, and apply calculated positions back to diagram items. This technic allows you apply advanced or custom algorithms with one click.
 
 ![Diagram Control - Microsoft Automatic Graph Layout (MSAGL) Algorithms](./Images/diagram-layouts.jpg)
 
 ## Implementation Details
 
-### Load Sample Graph
+### Extract Current Graph
 
-The application loads a diagram from an XML file before applying a layout. This example includes five datasets: **Sugiyama**, **Ranking**, **PhyloTree**, **MDS**, and **Disconnected Graphs**.
+Use the `GraphOperations.GetDiagramGraph` method to extract the current diagram. The method returns a `Graph` object that contains the collections of nodes and edges represented by diagram items:
 
 ```csharp
-void LoadSugiyama(object sender, DevExpress.Xpf.Bars.ItemClickEventArgs e) {
-    diagramControl.LoadDocument("Data/SugiyamaLayout.xml");
-}
-void LoadMDS(object sender, DevExpress.Xpf.Bars.ItemClickEventArgs e) {
-    diagramControl.LoadDocument("Data/MDSLayout.xml");
-}
-// … similar for Ranking, PhyloTree, DisconnectedGraphs
+GraphOperations.GetDiagramGraph(diagramControl);
 ```
 
-### Extract and Arrange Nodes
+### Create Position Info
 
-The `GraphOperations.GetDiagramGraph` extracts nodes and edges from the diagram. The selected MSAGL calculator computes positions, which are then applied to the diagram:
+For each shape, create a `PositionInfo` object that contains a reference to the shape and its calculated position:
 
 ```csharp
-void ApplyLayout(GraphLayout layout) {
-    try {
-        diagramControl.RelayoutDiagramItems(
-            layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl))
-        );
-        diagramControl.Items.OfType<IDiagramConnector>().ForEach(connector => { 
-            connector.Type = layout.GetDiagramConnectorType(); 
-            connector.UpdateRoute(); 
-        });
-        diagramControl.FitToDrawing();
-    } catch(Exception e) {
-        DXMessageBox.Show(string.Format("Error message: '{0}'", e.Message), "Error has been occurred");
-    }
-}
+layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl));
+```
+
+### Apply Layout
+
+Call the `DiagramControl.RelayoutDiagramItems` method and pass the collection of PositionInfo objects. This updates all shapes on the canvas:
+
+```csharp
+diagramControl.RelayoutDiagramItems(layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl)));
 ```
 
 ### Update Connectors
 
-After shapes are repositioned, connectors update routs. The code example sets connector types and updates their routes:
+After shapes are repositioned, reroute connectors to reflect the new layout:
 
 ```csharp
 diagramControl.Items.OfType<IDiagramConnector>().ForEach(connector => {
@@ -69,7 +58,7 @@ diagramControl.Controller.RegisterRoutingStrategy(
 
 ### Display Entire Diagram
 
-The `DiagramControl` adjusts its viewport to display the entire diagram:
+Fit the view to the drawing to ensure that all elements are visible:
 
 ```csharp
 diagramControl.FitToDrawing();
