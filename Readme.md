@@ -6,13 +6,13 @@
 
 # WPF Diagram Control - Microsoft Automatic Graph Layout (MSAGL) Algorithms
 
-This example integrates custom layout algorithms with [`DiagramControl`](https://docs.devexpress.com/WPF/DevExpress.Xpf.Diagram.DiagramControl). You can extract a graph from the diagram, process the graph with an external algorithm, and apply calculated positions back to diagram items. This technic allows you apply advanced or custom algorithms with one click.
+This example integrates **Microsoft Automatic Graph Layout (MSAGL)** algorithms with the WPF [`DiagramControl`](https://docs.devexpress.com/WPF/DevExpress.Xpf.Diagram.DiagramControl). The workflow extracts a graph from the diagram, processes it with an MSAGL algorithm, and applies calculated node positions to diagram items.
 
 ![Diagram Control - Microsoft Automatic Graph Layout (MSAGL) Algorithms](./Images/diagram-layouts.jpg)
 
 ## Implementation Details
 
-### Extract Current Graph
+### Extract the Graph
 
 Use the `GraphOperations.GetDiagramGraph` method to extract the current diagram. The method returns a `Graph` object that contains the collections of nodes and edges represented by diagram items:
 
@@ -20,36 +20,40 @@ Use the `GraphOperations.GetDiagramGraph` method to extract the current diagram.
 GraphOperations.GetDiagramGraph(diagramControl);
 ```
 
-### Create Position Info
+### Calculate Position Information
 
-For each shape, create a `PositionInfo` object that contains a reference to the shape and its calculated position:
+For each shape, calculate diagram shape coordinates and store them in `PositionInfo` objects:
 
 ```csharp
 layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl));
+
+public virtual IEnumerable<PositionInfo<IDiagramItem>> RelayoutGraphNodesPosition(Graph<IDiagramItem> graph) {
+    GeometryGraph = MsaglGeometryGraphHelpers.CreateGeometryGraph(graph);
+    LayoutCalculator.CalculateLayout(GeometryGraph);
+    return MsaglGeometryGraphHelpers.GetGetNodesPositionInfo(GeometryGraph);
+}
 ```
 
 ### Apply Layout
 
-Call the `DiagramControl.RelayoutDiagramItems` method and pass the collection of PositionInfo objects. This updates all shapes on the canvas:
+Update the diagram with calculated node positions:
 
 ```csharp
-diagramControl.RelayoutDiagramItems(layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl)));
+diagramControl.RelayoutDiagramItems(
+    layout.RelayoutGraphNodesPosition(GraphOperations.GetDiagramGraph(diagramControl))
+);
 ```
 
-### Update Connectors
+### Update Shape Connectors
 
-After shapes are repositioned, reroute connectors to reflect the new layout:
+After shapes are repositioned, reroute shape connectors and register a routing strategy:
 
 ```csharp
 diagramControl.Items.OfType<IDiagramConnector>().ForEach(connector => {
     connector.Type = layout.GetDiagramConnectorType();
     connector.UpdateRoute();
 });
-```
 
-The controller also registers a routing strategy:
-
-```csharp
 diagramControl.Controller.RegisterRoutingStrategy(
     layout.GetDiagramConnectorType(), 
     layout.GetDiagramRoutingStrategy()
@@ -58,7 +62,7 @@ diagramControl.Controller.RegisterRoutingStrategy(
 
 ### Display Entire Diagram
 
-Fit the view to the drawing to ensure that all elements are visible:
+Fit the view so that all items are visible in the viewport:
 
 ```csharp
 diagramControl.FitToDrawing();
@@ -66,7 +70,7 @@ diagramControl.FitToDrawing();
 
 ### Ribbon commands
 
-Ribbon buttons load documents and apply the corresponding algorithm:
+Create ribbon items and handle their `ItemClick` events to apply different MSAGL algorithms:
 
 ```csharp
 void ApplySugiyama(object s, ItemClickEventArgs e) {
