@@ -85,7 +85,7 @@
   <ItemGroup>
     <Compile Include="Converter.vb" />
     <Compile Include="LayoutCalculators\PhyloTreeLayoutCalculator.vb" />
-    <Compile Include="LayoutCalculators\DisconnectedGraphsLayoutCaculator.vb" />
+    <Compile Include="LayoutCalculators\DisconnectedGraphsLayoutCalculator.vb" />
     <Compile Include="LayoutCalculators\ILayoutCalculator.vb" />
     <Compile Include="LayoutCalculators\MDSLayoutCalculator.vb" />
     <Compile Include="LayoutCalculators\RankingLayoutCalculator.vb" />

@@ -74,7 +74,7 @@
   <ItemGroup>
     <Compile Include="Converter.cs" />
     <Compile Include="LayoutCalculators\PhyloTreeLayoutCalculator.cs" />
-    <Compile Include="LayoutCalculators\DisconnectedGraphsLayoutCaculator.cs" />
+    <Compile Include="LayoutCalculators\DisconnectedGraphsLayoutCalculator.cs" />
     <Compile Include="LayoutCalculators\ILayoutCalculator.cs" />
     <Compile Include="LayoutCalculators\MDSLayoutCalculator.cs" />
     <Compile Include="LayoutCalculators\RankingLayoutCalculator.cs" />
